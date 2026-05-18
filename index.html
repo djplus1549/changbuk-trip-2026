@@ -186,9 +186,20 @@ body{font-family:-apple-system,BlinkMacSystemFont,"Apple SD Gothic Neo","Noto Sa
 @keyframes greenPulse{0%,100%{background:#EAF3DE}50%{background:#C8E6C9}}
 
 .attend-grid{display:grid;grid-template-columns:repeat(4,1fr);gap:5px;padding:2px 0}
-.attend-item{border-radius:8px;padding:8px 2px;text-align:center;font-size:11px;font-weight:500;border:0.5px solid #e0e0e0;background:#fff;cursor:pointer;color:#1a1a1a;touch-action:manipulation;transition:all .12s;line-height:1.3}
+.attend-item{border-radius:8px;padding:8px 2px;text-align:center;font-size:11px;font-weight:500;border:0.5px solid #e0e0e0;background:#fff;cursor:pointer;color:#1a1a1a;touch-action:manipulation;transition:all .12s;line-height:1.3;position:relative}
 .attend-item.on{background:#185FA5;color:#fff;border-color:#185FA5}
 .attend-item:active{opacity:.7}
+.attend-edit-dot{position:absolute;top:3px;right:4px;font-size:9px;opacity:.5}
+/* 학생 관리 모달 */
+.stu-mgmt-bar{display:flex;gap:6px;margin-bottom:10px}
+.stu-mgmt-btn{flex:1;padding:8px 4px;font-size:12px;border-radius:8px;border:0.5px solid #B5D4F4;background:#E6F1FB;color:#185FA5;cursor:pointer;font-family:inherit;text-align:center;touch-action:manipulation}
+.stu-modal-bg{display:none;position:fixed;inset:0;background:rgba(0,0,0,.45);z-index:900;align-items:center;justify-content:center}
+.stu-modal-bg.show{display:flex}
+.stu-modal{background:#fff;border-radius:14px;padding:18px;width:290px;max-width:92vw}
+.stu-modal h3{font-size:13px;font-weight:600;margin-bottom:10px;color:#185FA5}
+.stu-modal input{width:100%;padding:8px 10px;border:0.5px solid #85B7EB;border-radius:8px;font-size:16px;background:#fff;margin-bottom:8px;font-family:inherit}
+.stu-modal input:focus{outline:none;border-color:#185FA5}
+.stu-modal-btns{display:flex;gap:6px;justify-content:flex-end}
 /* Firebase 로딩 */
 .fb-loading{position:fixed;inset:0;background:rgba(255,255,255,.9);z-index:9999;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:12px}
 .fb-spinner{width:36px;height:36px;border:3px solid #B5D4F4;border-top-color:#185FA5;border-radius:50%;animation:spin .8s linear infinite}
@@ -475,6 +486,11 @@ body{font-family:-apple-system,BlinkMacSystemFont,"Apple SD Gothic Neo","Noto Sa
       </div>
       <div class="board-prog-bg"><div class="board-prog-fill" id="attend-prog-fill" style="width:0%"></div></div>
     </div>
+    <div class="stu-mgmt-bar">
+      <button class="stu-mgmt-btn" onclick="openStuModal('add')">➕ 학생 추가</button>
+      <button class="stu-mgmt-btn" onclick="enterStuEditMode()">✏️ 이름 수정</button>
+      <button class="stu-mgmt-btn" style="color:#d32f2f;border-color:#ffcdd2;background:#fff5f5" onclick="enterStuDeleteMode()">🗑️ 학생 삭제</button>
+    </div>
     <div id="attend-grid" style="margin-bottom:10px"></div>
     <button class="board-reset-btn" onclick="resetAttend()">🔄 현재 반 초기화</button>
   </div>
@@ -494,6 +510,17 @@ body{font-family:-apple-system,BlinkMacSystemFont,"Apple SD Gothic Neo","Noto Sa
   </div>
 </div>
 </div>
+</div>
+
+<div class="stu-modal-bg" id="stu-modal-bg">
+  <div class="stu-modal">
+    <h3 id="stu-modal-title">학생 추가</h3>
+    <input type="text" id="stu-modal-input" placeholder="이름 입력">
+    <div class="stu-modal-btns">
+      <button class="btn-sm" onclick="closeStuModal()">취소</button>
+      <button class="btn-sm btn-pri" onclick="confirmStuModal()">확인</button>
+    </div>
+  </div>
 </div>
 
 <div class="modal-overlay" id="seat-modal">
@@ -578,8 +605,6 @@ var STUDENTS = {
     {no:14,name:"배지현",phone:"010-8014-8791"},
     {no:15,name:"서은하",phone:"010-8265-6130"},
     {no:16,name:"염도윤",phone:"010-6490-1402"},
-    {no:17,name:"이승희",phone:"010-7224-0807"},
-    {no:18,name:"이시후",phone:"010-9383-5088"},
     {no:19,name:"이정원",phone:"010-8739-2134"},
     {no:20,name:"정도윤",phone:"010-6397-8028"},
     {no:21,name:"정수린",phone:"010-4918-5671"},
@@ -651,7 +676,6 @@ var STUDENTS = {
     {no:8,name:"김지원",phone:"010-6349-0361"},
     {no:9,name:"김지환",phone:"010-9422-9668"},
     {no:10,name:"노아영",phone:"010-4908-4695"},
-    {no:11,name:"문시우",phone:"010-7621-5850"},
     {no:12,name:"박고은",phone:"010-3595-0862"},
     {no:13,name:"박시온",phone:"010-8614-9351"},
     {no:14,name:"박원호",phone:"010-5475-7087"},
@@ -712,7 +736,6 @@ var STUDENTS = {
     {no:17,name:"이수현",phone:"010-5310-6876"},
     {no:18,name:"임경빈",phone:"010-4559-6150"},
     {no:19,name:"정민기",phone:"010-9627-2879"},
-    {no:20,name:"정수은",phone:"010-5811-9558"},
     {no:21,name:"정연우",phone:"010-8192-2112"},
     {no:22,name:"추성아",phone:"010-7963-0800"},
     {no:23,name:"허은진",phone:"010-4920-8915"},
@@ -730,7 +753,6 @@ var STUDENTS = {
     {no:9,name:"오수린",phone:"010-5723-8287"},
     {no:10,name:"이건영",phone:"010-2382-5107"},
     {no:11,name:"이다원",phone:"010-2466-5857"},
-    {no:12,name:"이루리",phone:"010-9323-9026"},
     {no:13,name:"이하준",phone:"010-7657-4559"},
     {no:14,name:"이한비",phone:"010-3996-0308"},
     {no:15,name:"이효승",phone:"010-2024-4454"},
@@ -742,7 +764,7 @@ var STUDENTS = {
     {no:21,name:"한서우",phone:"010-8458-4146"},
     {no:22,name:"황우주",phone:"010-9893-8440"},
     {no:23,name:"황지민",phone:"010-7775-4929"},
-    {no:24,name:"이사랑",phone:"010-4107-2951"},
+    {no:24,name:"김태흔",phone:"010-8556-6667"},
   ],
   "10반":[
     {no:1,name:"강다은",phone:"010-8323-3945"},
@@ -788,10 +810,7 @@ var STUDENTS = {
     {no:15,name:"양서연",phone:"010-6440-0363"},
     {no:16,name:"이서진",phone:"010-9608-4426"},
     {no:17,name:"이예은",phone:"010-3697-1763"},
-    {no:18,name:"이준희",phone:"010-2103-5088"},
     {no:19,name:"이채영",phone:"010-9302-6277"},
-    {no:20,name:"임소연",phone:"010-3253-8797"},
-    {no:21,name:"주이준",phone:"010-6220-0245"},
     {no:22,name:"최송주",phone:"010-7462-7160"},
     {no:23,name:"최연호",phone:"010-8531-3424"},
     {no:24,name:"최지완",phone:"010-9061-5935"},
@@ -841,7 +860,7 @@ var groupsAll=[
   {cls:'5반',leader:'이연재',members:[{no:'13',name:'여원준'},{no:'14',name:'이연재',l:true},{no:'15',name:'임유민'},{no:'16',name:'정수민'},{no:'17',name:'조여주'},{no:'18',name:'최다희'}]},
   {cls:'5반',leader:'한성현',members:[{no:'19',name:'최민기'},{no:'20',name:'최시우'},{no:'21',name:'추지인'},{no:'22',name:'한성현',l:true},{no:'23',name:'한예람'},{no:'24',name:'한환희'}]},
   {cls:'6반',leader:'강거노',members:[{no:'1',name:'강거노',l:true},{no:'2',name:'강영지'},{no:'3',name:'권예림'},{no:'4',name:'권예진'},{no:'5',name:'김결'},{no:'6',name:'김민성'}]},
-  {cls:'6반',leader:'김수아',members:[{no:'7',name:'김수아',l:true},{no:'8',name:'김지원'},{no:'9',name:'김지환'},{no:'10',name:'노아영'},{no:'11',name:'문시우'},{no:'12',name:'박고은'}]},
+  {cls:'6반',leader:'김수아',members:[{no:'7',name:'김수아',l:true},{no:'8',name:'김지원'},{no:'9',name:'김지환'},{no:'10',name:'노아영'},{no:'12',name:'박고은'}]},
   {cls:'6반',leader:'박시온',members:[{no:'13',name:'박시온',l:true},{no:'14',name:'박원호'},{no:'15',name:'유신우'},{no:'16',name:'이서윤'},{no:'17',name:'이시형'},{no:'18',name:'장태일'}]},
   {cls:'6반',leader:'정한별',members:[{no:'19',name:'정한별',l:true},{no:'20',name:'최수민'},{no:'21',name:'최승원'},{no:'22',name:'하혜원'},{no:'23',name:'한예준'},{no:'24',name:'황주은'}]},
   {cls:'7반',leader:'구재원',members:[{no:'1',name:'구재원',l:true},{no:'2',name:'김나원'},{no:'3',name:'김다연'},{no:'4',name:'김동희'},{no:'5',name:'김민오'},{no:'6',name:'김수윤'}]},
@@ -851,19 +870,19 @@ var groupsAll=[
   {cls:'8반',leader:'강주연',members:[{no:'1',name:'강주연',l:true},{no:'2',name:'강지훈'},{no:'3',name:'경다은'},{no:'4',name:'김가현'},{no:'5',name:'김라희'},{no:'6',name:'김태영'}]},
   {cls:'8반',leader:'박다은',members:[{no:'7',name:'박다은',l:true},{no:'8',name:'박지용'},{no:'9',name:'백승아'},{no:'10',name:'변시온'},{no:'11',name:'변재훈'},{no:'12',name:'석도연'}]},
   {cls:'8반',leader:'손민주',members:[{no:'13',name:'손민주',l:true},{no:'14',name:'이단비'},{no:'15',name:'이로운'},{no:'16',name:'이민찬'},{no:'17',name:'이수현'},{no:'18',name:'임경빈'}]},
-  {cls:'8반',leader:'정민기',members:[{no:'19',name:'정민기',l:true},{no:'20',name:'정수은'},{no:'21',name:'정연우'},{no:'22',name:'추성아'},{no:'23',name:'허은진'},{no:'24',name:'홍동환'}]},
+  {cls:'8반',leader:'정민기',members:[{no:'19',name:'정민기',l:true},{no:'21',name:'정연우'},{no:'22',name:'추성아'},{no:'23',name:'허은진'},{no:'24',name:'홍동환'}]},
   {cls:'9반',leader:'강규민',members:[{no:'1',name:'강규민',l:true},{no:'2',name:'강민석'},{no:'3',name:'김시우'},{no:'4',name:'김연우'},{no:'5',name:'박세은'},{no:'6',name:'박시현'}]},
-  {cls:'9반',leader:'박은빈',members:[{no:'7',name:'박은빈',l:true},{no:'8',name:'박태준'},{no:'9',name:'오수린'},{no:'10',name:'이건영'},{no:'11',name:'이다원'},{no:'12',name:'이루리'}]},
+  {cls:'9반',leader:'박은빈',members:[{no:'7',name:'박은빈',l:true},{no:'8',name:'박태준'},{no:'9',name:'오수린'},{no:'10',name:'이건영'},{no:'11',name:'이다원'}]},
   {cls:'9반',leader:'이하준',members:[{no:'13',name:'이하준',l:true},{no:'14',name:'이한비'},{no:'15',name:'이효승'},{no:'16',name:'조하윤'},{no:'17',name:'최보미'},{no:'18',name:'최은우'}]},
-  {cls:'9반',leader:'최지안',members:[{no:'19',name:'최지안',l:true},{no:'20',name:'알리샤'},{no:'21',name:'한서우'},{no:'22',name:'황우주'},{no:'23',name:'황지민'},{no:'24',name:'이사랑'}]},
+  {cls:'9반',leader:'최지안',members:[{no:'19',name:'최지안',l:true},{no:'20',name:'알리샤'},{no:'21',name:'한서우'},{no:'22',name:'황우주'},{no:'23',name:'황지민'},{no:'24',name:'김태흔'}]},
   {cls:'10반',leader:'강다은',members:[{no:'1',name:'강다은',l:true},{no:'2',name:'강지용'},{no:'3',name:'권서연'},{no:'4',name:'김민규'},{no:'5',name:'김민설'},{no:'6',name:'김상윤'}]},
   {cls:'10반',leader:'김시연',members:[{no:'7',name:'김시연',l:true},{no:'8',name:'김지호'},{no:'9',name:'문지민'},{no:'10',name:'박성현'},{no:'11',name:'박수연'},{no:'12',name:'박시현'}]},
   {cls:'10반',leader:'박정원',members:[{no:'13',name:'박정원',l:true},{no:'14',name:'박지연'},{no:'15',name:'박하율'},{no:'16',name:'배은진'},{no:'17',name:'서원빈'},{no:'18',name:'손하윤'}]},
   {cls:'10반',leader:'우민재',members:[{no:'19',name:'우민재',l:true},{no:'20',name:'장우영'},{no:'21',name:'정지원'},{no:'22',name:'진현우'},{no:'23',name:'최휘담'},{no:'24',name:'황현서'}]},
   {cls:'11반',leader:'강민서',members:[{no:'1',name:'강민서',l:true},{no:'2',name:'강태우'},{no:'3',name:'강효림'},{no:'4',name:'김건우'},{no:'5',name:'김규리'},{no:'6',name:'김민준'}]},
   {cls:'11반',leader:'김선율',members:[{no:'7',name:'김선율',l:true},{no:'8',name:'김승훤'},{no:'9',name:'김시하'},{no:'10',name:'김윤서'},{no:'11',name:'김하영'},{no:'12',name:'문주현'}]},
-  {cls:'11반',leader:'박선우',members:[{no:'13',name:'박선우',l:true},{no:'14',name:'박정제'},{no:'15',name:'양서연'},{no:'16',name:'이서진'},{no:'17',name:'이예은'},{no:'18',name:'이준희'}]},
-  {cls:'11반',leader:'이채영',members:[{no:'19',name:'이채영',l:true},{no:'20',name:'임소연'},{no:'21',name:'주이준'},{no:'22',name:'최송주'},{no:'23',name:'최연호'},{no:'24',name:'최지완'}]}
+  {cls:'11반',leader:'박선우',members:[{no:'13',name:'박선우',l:true},{no:'14',name:'박정제'},{no:'15',name:'양서연'},{no:'16',name:'이서진'},{no:'17',name:'이예은'}]},
+  {cls:'11반',leader:'이채영',members:[{no:'19',name:'이채영',l:true},{no:'22',name:'최송주'},{no:'23',name:'최연호'},{no:'24',name:'최지완'}]}
 ];
 var schData={d1:[
   {t:'06:30~07:00',d:'🏫 학교 집결 및 인원 점검 · 출발'},{t:'07:00~08:20',d:'🚌 서울 이동 (성주 휴게소)'},
@@ -1046,6 +1065,16 @@ function initFirestore(){
       if(tt) tt.textContent = window.attendTitleVal;
       renderAttend();
     }
+  });
+
+  // 7. 학생 명단 (커스텀)
+  onSnapshot(doc(db,'studentList','state'), snap => {
+    if(snap.exists() && snap.data().data){
+      window.customStudents = snap.data().data;
+    } else {
+      window.customStudents = null;
+    }
+    renderAttend();
   });
 
   // 로딩 화면 제거
@@ -1329,6 +1358,22 @@ window.tNight = async function(k){
 // ── 출석체크 ──────────────────────────────────────────────────
 const ATTEND_CLASSES = ['1반','2반','3반','4반','5반','6반','7반','8반','9반','10반','11반'];
 
+// 커스텀 학생 명단 (STUDENTS 원본을 복사해서 수정)
+// 처음엔 null — Firestore에서 로드 후 세팅
+window.customStudents = null;
+
+function getStudentList(cls){
+  // customStudents가 있으면 사용, 없으면 원본 STUDENTS 사용
+  if(window.customStudents && window.customStudents[cls]){
+    return window.customStudents[cls];
+  }
+  return (STUDENTS[cls]||[]).map(s=>s.name);
+}
+
+async function saveStudentList(){
+  await setDoc(doc(db,'studentList','state'),{data: window.customStudents});
+}
+
 function buildAttendClsBar(){
   const el = $('attend-cls-bar'); if(!el) return;
   let h = '';
@@ -1340,6 +1385,7 @@ function buildAttendClsBar(){
 
 window.selectAttendCls = function(cls){
   window.attendCls = cls;
+  window.stuMgmtMode = null;
   buildAttendClsBar();
   renderAttend();
 };
@@ -1353,11 +1399,26 @@ window.toggleAttendEdit = function(){
 window.saveAttendTitle = async function(){
   const v = $('attend-title-input').value.trim();
   if(v){ window.attendTitleVal=v; $('attend-title-text').textContent=v; }
-  $('attend-edit-form').style.display='none';
+  $('attend-title-edit-form')||($('attend-edit-form').style.display='none');
   await saveAttendData();
 };
 
 window.toggleAttend = async function(cls, name){
+  if(window.stuMgmtMode==='edit'){
+    openStuModal('edit', name); return;
+  }
+  if(window.stuMgmtMode==='delete'){
+    if(!confirm(`"${name}"을 명단에서 삭제할까요?`)) return;
+    if(!window.customStudents) initCustomStudents();
+    window.customStudents[cls] = window.customStudents[cls].filter(n=>n!==name);
+    // 출석 데이터에서도 제거
+    if(window.attendData[cls]) delete window.attendData[cls][name];
+    window.stuMgmtMode = null;
+    renderAttend();
+    await saveStudentList();
+    await saveAttendData();
+    return;
+  }
   if(!window.attendData[cls]) window.attendData[cls]={};
   window.attendData[cls][name] = !window.attendData[cls][name];
   renderAttend();
@@ -1371,27 +1432,111 @@ window.resetAttend = async function(){
   await saveAttendData();
 };
 
+// ── 학생 관리 모달 ────────────────────────────────────────────
+window.stuMgmtMode = null;  // null | 'add' | 'edit' | 'delete'
+window.stuEditTarget = null;
+
+function initCustomStudents(){
+  if(window.customStudents) return;
+  window.customStudents = {};
+  ATTEND_CLASSES.forEach(cls=>{
+    window.customStudents[cls] = (STUDENTS[cls]||[]).map(s=>s.name);
+  });
+}
+
+window.openStuModal = function(mode, targetName){
+  window.stuMgmtMode = mode;
+  window.stuEditTarget = targetName||null;
+  const input = $('stu-modal-input');
+  if(mode==='add'){
+    $('stu-modal-title').textContent = `학생 추가 — 2-${window.attendCls}`;
+    input.value='';
+    input.placeholder='추가할 학생 이름';
+  } else if(mode==='edit'){
+    $('stu-modal-title').textContent = `이름 수정 — "${targetName}"`;
+    input.value = targetName;
+    input.placeholder='수정할 이름';
+  }
+  $('stu-modal-bg').classList.add('show');
+  setTimeout(()=>input.focus(),80);
+};
+
+window.closeStuModal = function(){
+  $('stu-modal-bg').classList.remove('show');
+  window.stuMgmtMode = null;
+  window.stuEditTarget = null;
+  renderAttend();
+};
+
+window.confirmStuModal = async function(){
+  const val = $('stu-modal-input').value.trim();
+  if(!val){ alert('이름을 입력해 주세요.'); return; }
+  const cls = window.attendCls;
+  initCustomStudents();
+
+  if(window.stuMgmtMode==='add'){
+    if(window.customStudents[cls].includes(val)){
+      alert('이미 있는 이름입니다.'); return;
+    }
+    window.customStudents[cls].push(val);
+  } else if(window.stuMgmtMode==='edit'){
+    const old = window.stuEditTarget;
+    const idx = window.customStudents[cls].indexOf(old);
+    if(idx>=0) window.customStudents[cls][idx]=val;
+    // 출석 데이터 이름도 변경
+    if(window.attendData[cls]&&window.attendData[cls][old]!==undefined){
+      window.attendData[cls][val]=window.attendData[cls][old];
+      delete window.attendData[cls][old];
+    }
+  }
+  $('stu-modal-bg').classList.remove('show');
+  window.stuMgmtMode = null;
+  window.stuEditTarget = null;
+  renderAttend();
+  await saveStudentList();
+  await saveAttendData();
+};
+
+window.enterStuEditMode = function(){
+  window.stuMgmtMode = 'edit';
+  renderAttend();
+  alert('수정할 학생 이름을 터치하세요.');
+};
+
+window.enterStuDeleteMode = function(){
+  window.stuMgmtMode = 'delete';
+  renderAttend();
+  alert('삭제할 학생을 터치하세요.');
+};
+
+$('stu-modal-input').addEventListener('keydown',e=>{if(e.key==='Enter')window.confirmStuModal();if(e.key==='Escape')window.closeStuModal();});
+$('stu-modal-bg').addEventListener('click',e=>{if(e.target===$('stu-modal-bg'))window.closeStuModal();});
+
 function renderAttend(){
   const cls = window.attendCls;
   const clsData = window.attendData[cls] || {};
-  const students = STUDENTS[cls] || [];
+  const students = getStudentList(cls);
   const total = students.length;
-  const done = students.filter(s => clsData[s.name]).length;
+  const done = students.filter(s=>clsData[s]).length;
 
-  // 진행바
-  const cnt = $('attend-prog-cnt'); if(cnt) cnt.textContent = `${done} / ${total}명`;
-  const fill = $('attend-prog-fill'); if(fill) fill.style.width = total ? Math.round(done/total*100)+'%' : '0%';
-  const lbl = $('attend-cls-label'); if(lbl) lbl.textContent = `2-${cls} 출석 현황`;
+  const cnt=$('attend-prog-cnt');if(cnt)cnt.textContent=`${done} / ${total}명`;
+  const fill=$('attend-prog-fill');if(fill)fill.style.width=total?Math.round(done/total*100)+'%':'0%';
+  const lbl=$('attend-cls-label');if(lbl)lbl.textContent=`2-${cls} 출석 현황`;
 
-  // 그리드
-  const grid = $('attend-grid'); if(!grid) return;
-  let h = '<div class="attend-grid">';
-  students.forEach(s => {
-    const on = !!clsData[s.name];
-    h += `<div class="attend-item${on?' on':''}" onclick="toggleAttend('${cls}','${s.name}')">${s.name}</div>`;
+  const grid=$('attend-grid');if(!grid)return;
+  const mode=window.stuMgmtMode;
+  let h='<div class="attend-grid">';
+  students.forEach(name=>{
+    const on=!!clsData[name];
+    let style='';
+    let dot='';
+    if(mode==='edit'){style='border:1.5px solid #185FA5;background:#E6F1FB;color:#185FA5;';dot='<span class="attend-edit-dot">✏️</span>';}
+    else if(mode==='delete'){style='border:1.5px solid #ffcdd2;background:#fff5f5;color:#d32f2f;';dot='<span class="attend-edit-dot">🗑</span>';}
+    else if(on){style='background:#185FA5;color:#fff;border-color:#185FA5;';}
+    h+=`<div class="attend-item" style="${style}" onclick="toggleAttend('${cls}','${name}')">${dot}${name}</div>`;
   });
-  h += '</div>';
-  grid.innerHTML = h;
+  h+='</div>';
+  grid.innerHTML=h;
 }
 
 // ── 차량 ──────────────────────────────────────────────────────
